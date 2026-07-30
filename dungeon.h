@@ -103,7 +103,7 @@ void init(int64_t seed)
 {
     reset_drops();
     set_dungeon_seed(seed);
-    next_long_global(); // Fire once to skip f0
+    next_long(&dungeon_seed); // Fire once to skip f0
 }
 
 int new_feeling()
