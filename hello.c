@@ -6,25 +6,41 @@
 #include "seed.h"
 #include "file_writer.h"
 
-int max_feeling_count = 10;
+int max_feeling_count = 12;
+int feeling_counts[7];
 
-int test_seed(int64_t seed)
+void test_seed(int64_t seed)
 {
-    int feeling_count = 0;
+    feeling_counts[0] = 0;
+    feeling_counts[1] = 0;
+    feeling_counts[2] = 0;
+    feeling_counts[3] = 0;
+    feeling_counts[4] = 0;
+    feeling_counts[5] = 0;
+    feeling_counts[6] = 0;
+
     init(seed);
 
     for (depth = 1; depth < 25; depth++)
     {
         int f = new_feeling();
-        if (f == 3) // 3 = Enemies moving in the darkness
-            feeling_count++;
+        if (f <= 6)
+        {
+            feeling_counts[f]++;
+        }
 
         // Finish early if the number of floors remaining is not enough to match previous best
         // This noticably speeds up the search
-        if ((24 - depth) - ((24 - depth) / 5) < max_feeling_count - feeling_count)
-            return feeling_count;
+        int threshold = max_feeling_count - (24 - depth) + ((24 - depth) / 5);
+        if (feeling_counts[0] < threshold &&
+            feeling_counts[1] < threshold &&
+            feeling_counts[2] < threshold &&
+            feeling_counts[3] < threshold &&
+            feeling_counts[4] < threshold &&
+            feeling_counts[5] < threshold &&
+            feeling_counts[6] < threshold)
+            return;
     }
-    return feeling_count;
 }
 
 int64_t get_time()
@@ -46,18 +62,19 @@ void scan_seeds(int64_t starting_seed, int64_t seeds_to_scan)
 
     for (int64_t seeds_checked = 1; seeds_checked <= seeds_to_scan; seeds_checked++)
     {
-        int feeling_count = test_seed(seed);
-        if (feeling_count == max_feeling_count)
+        test_seed(seed);
+        if (feeling_counts[0] >= max_feeling_count ||
+            feeling_counts[1] >= max_feeling_count ||
+            feeling_counts[2] >= max_feeling_count ||
+            feeling_counts[3] >= max_feeling_count ||
+            feeling_counts[4] >= max_feeling_count ||
+            feeling_counts[5] >= max_feeling_count ||
+            feeling_counts[6] >= max_feeling_count)
         {
-            printf("Matched previous best (%d): %s\n", feeling_count, display_seed(seed));
-            write_seed_to_file(displayed_seed, feeling_count);
+            printf("%s - %dC %dW %dG %dD %dL %dT %dS\n", display_seed(seed), feeling_counts[0], feeling_counts[1], feeling_counts[2], feeling_counts[3], feeling_counts[4], feeling_counts[5], feeling_counts[6]);
+            write_seed_to_file(displayed_seed, feeling_counts);
         }
-        else if (feeling_count > max_feeling_count)
-        {
-            max_feeling_count = feeling_count;
-            printf("===== New best: %d Seed: %s\n", feeling_count, display_seed(seed));
-            write_seed_to_file(displayed_seed, feeling_count);
-        }
+
         seed++;
 
         if (seeds_checked % 200000000 == 0)
