@@ -2,11 +2,14 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <time.h>
+#include <signal.h>
 #include "dungeon.h"
 #include "seed.h"
 #include "file_writer.h"
 
-int max_feeling_count = 12;
+static volatile int interrupted = 0;
+
+int max_feeling_count = 13;
 int feeling_counts[7];
 
 void test_seed(int64_t seed)
@@ -87,7 +90,19 @@ void scan_seeds(int64_t starting_seed, int64_t seeds_to_scan)
                    runtime / 1000.0f,
                    seeds_checked / 1000000.0f / (runtime / 60000.0f));
         }
+
+        if (seeds_checked % 1000000 == 0 && interrupted) // If we check the flag every once in a while it might be faster, idk
+        {
+            printf("Run interrupted. Continue from: %s %lld\n", display_seed(seed), seeds_to_scan - seeds_checked);
+            write_interrupt_to_file(displayed_seed, seeds_to_scan - seeds_checked);
+            break;
+        }
     }
+}
+
+void interruptHandler(int something)
+{
+    interrupted = 1;
 }
 
 int main(int argc, char *argv[])
@@ -100,5 +115,7 @@ int main(int argc, char *argv[])
         seeds_to_scan = atoll(argv[2]);
     if (argc >= 4)
         open_file(argv[3]);
+
+    signal(SIGINT, interruptHandler);
     scan_seeds(starting_seed, seeds_to_scan);
 }

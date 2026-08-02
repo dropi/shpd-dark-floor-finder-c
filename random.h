@@ -7,7 +7,7 @@ int64_t level_seed, dungeon_seed;
 
 const uint64_t multiplier = 0x5deece66dLL;
 const uint64_t mask = (1LL << 48) - 1;
-const uint64_t addend = 0xBL;
+const uint64_t addend = 0xBLL;
 
 uint64_t scramble_seed(uint64_t s)
 {
